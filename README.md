@@ -56,6 +56,10 @@ CG Bank Bot is a feature-rich Discord bot designed to manage inventories, assign
 
 - `!showhelp`: List all commands with descriptions and examples. Includes an interactive dropdown menu for selecting commands.
   
+## Inviting the Bot
+To invite the bot to your server, use the following URL: [CG Bank Bot](https://discord.com/api/oauth2/authorize?client_id=1242981337342677003&permissions=[532576418880]&scope=bot%20applications.commands)
+
+
 ## Installation
 
 To install the CG Bank Bot, follow these steps:
