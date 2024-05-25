@@ -81,9 +81,9 @@ async def showhelp(ctx):
 
     # Group commands into categories
     categories = {
-        "Inventory Commands": ["inv", "additem", "removeitem", "trade"],
-        "Admin Commands": ["setrole", "showroles", "clearroles"],
-        "Other Commands": ["viewlogs"]
+        "**Inventory Commands**": ["inv", "additem", "removeitem", "trade"],
+        "**Admin Commands**": ["setrole", "showroles", "clearroles"],
+        "**Other Commands**": ["viewlogs"]
     }
 
     # Format commands for each category
@@ -241,7 +241,9 @@ async def trade(ctx, item: str, from_user: discord.User, to_user: discord.User):
 
 # Command to view logs of a specific user (accessible by all users)
 @bot.command(name="viewlogs", description="Sneak a peek at someone's activity logs. Shhh, it's a secret!")
-async def viewlogs(ctx, user: discord.User):
+async def viewlogs(ctx, user: discord.User = None):
+    if user is None:
+        user = ctx.author  # Default to the command invoker if no user is specified
     user_id = str(user.id)
     log_file_path = f'logs/{user_id}.log'
     if os.path.exists(log_file_path):
@@ -260,6 +262,38 @@ async def viewlogs(ctx, user: discord.User):
             color=discord.Color.red()
         )
         await ctx.reply(embed=embed)
+
+# Error handler to show command usage when an error occurs
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.BadArgument):
+        command = ctx.command
+        description = command.description if command.description else "No description available"
+        example = f"Example: `!{command.name} `"
+        if command.name == "inv":
+            example += "@username or !inv"
+        elif command.name == "additem":
+            example += "@username item_name"
+        elif command.name == "removeitem":
+            example += "@username item_name"
+        elif command.name == "trade":
+            example += "item_name @from_user @to_user"
+        elif command.name == "viewlogs":
+            example += "@username"
+        elif command.name == "setrole":
+            example += "@username role_name"
+        elif command.name == "showroles":
+            example += ""
+        elif command.name == "clearroles":
+            example += ""
+        embed = discord.Embed(
+            title=f"Usage: !{command.name}",
+            description=f"{description}\n{example}",
+            color=discord.Color.orange()
+        )
+        await ctx.reply(embed=embed)
+    else:
+        raise error
 
 # Start the bot with your token
 bot.run(os.getenv("bot_token"))
