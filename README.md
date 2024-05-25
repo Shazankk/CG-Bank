@@ -89,12 +89,14 @@ To install the CG Bank Bot, follow these steps:
 To run the bot, simply execute the following command:
 ```bash
 python inventory_bot.py
-Developer
-This bot was developed by Shashank Goud.
+```
 
+Developer
+```css
+This bot was developed by Shashank Goud.
 Email: shashaankgoud@gmail.com
 Ethereum Wallet: 0xf50fBB149Dccfcf1a57A516cCdfC663B6B4D5381
-
+```
 If you like the bot and would like to support the development or just want to buy me a coffee, feel free to send some ETH or NFTs to the above wallet address. Your support is greatly appreciated!
 
 Support
