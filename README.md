@@ -92,7 +92,7 @@ python inventory_bot.py
 ```
 
 Developer
-```css
+```
 This bot was developed by Shashank Goud.
 Email: shashaankgoud@gmail.com
 Ethereum Wallet: 0xf50fBB149Dccfcf1a57A516cCdfC663B6B4D5381
