@@ -77,76 +77,51 @@ def get_role_mentions(ctx):
 # Command to list all commands with descriptions and examples
 @bot.command(name="showhelp", description="List all commands with descriptions and examples.")
 async def showhelp(ctx):
-    embed = discord.Embed(title="Command List", description="Here are all the available commands:", color=0x00ff00)
-    for command in bot.commands:
-        description = command.description if command.description else "No description available"
-        example = f"Example: `!{command.name} `"
-        if command.name == "inv":
-            example += "@username or !inv"
-        elif command.name == "additem":
-            example += "@username item_name"
-        elif command.name == "removeitem":
-            example += "@username item_name"
-        elif command.name == "trade":
-            example += "item_name @from_user @to_user"
-        elif command.name == "viewlogs":
-            example += "@username"
-        elif command.name == "setrole":
-            example += "role_name"
-        elif command.name == "showroles":
-            example += ""
-        elif command.name == "clearroles":
-            example += ""
-        embed.add_field(name=f"!{command.name}", value=f"{description}\n{example}", inline=False)
+    embed = discord.Embed(title="CG Bot Commands", description="Here are all the available commands:", color=0x00ff00)
 
-    # Dropdown menu
-    options = [
-        discord.SelectOption(label=command.name, description=command.description or "No description available")
-        for command in bot.commands
-    ]
-    select = discord.ui.Select(
-        placeholder="Select a command to get help",
-        options=options
-    )
+    # Group commands into categories
+    categories = {
+        "Inventory Commands": ["inv", "additem", "removeitem", "trade"],
+        "Admin Commands": ["setrole", "showroles", "clearroles"],
+        "Other Commands": ["viewlogs"]
+    }
 
-    # Callback for dropdown menu
-    async def callback(interaction):
-        selected_command = interaction.data['values'][0]
-        command = bot.get_command(selected_command)
-        description = command.description if command.description else "No description available"
-        example = f"Example: `!{command.name} `"
-        if command.name == "inv":
-            example += "@username or !inv"
-        elif command.name == "additem":
-            example += "@username item_name"
-        elif command.name == "removeitem":
-            example += "@username item_name"
-        elif command.name == "trade":
-            example += "item_name @from_user @to_user"
-        elif command.name == "viewlogs":
-            example += "@username"
-        elif command.name == "setrole":
-            example += "role_name"
-        elif command.name == "showroles":
-            example += ""
-        elif command.name == "clearroles":
-            example += ""
-        help_embed = discord.Embed(title=f"!{command.name}", description=f"{description}\n{example}", color=0x00ff00)
-        await interaction.response.edit_message(embed=help_embed, view=view)
+    # Format commands for each category
+    for category, commands_list in categories.items():
+        commands_description = ""
+        for command_name in commands_list:
+            command = bot.get_command(command_name)
+            if command:
+                description = command.description if command.description else "No description available"
+                example = f"Example: `!{command.name} `"
+                if command.name == "inv":
+                    example += "@username or !inv"
+                elif command.name == "additem":
+                    example += "@username item_name"
+                elif command.name == "removeitem":
+                    example += "@username item_name"
+                elif command.name == "trade":
+                    example += "item_name @from_user @to_user"
+                elif command.name == "viewlogs":
+                    example += "@username"
+                elif command.name == "setrole":
+                    example += "@username role_name"
+                elif command.name == "showroles":
+                    example += ""
+                elif command.name == "clearroles":
+                    example += ""
+                commands_description += f"**!{command.name}**\n{description}\n{example}\n\n"
+        embed.add_field(name=category, value=commands_description, inline=True)
 
-    select.callback = callback
-    view = discord.ui.View()
-    view.add_item(select)
-
-    await ctx.reply(embed=embed, view=view)
+    await ctx.reply(embed=embed)
 
 # Command to set roles that have permissions
 @bot.command(name="setrole", description="Set roles that have permissions for managing items.")
 @commands.has_permissions(administrator=True)
-async def setrole(ctx, *, role: str):
+async def setrole(ctx, user: discord.User, *, role: str):
     role_data["roles"].append(role)
     save_roles(role_data)
-    await ctx.reply(f"Role '{role}' has been added to the permissions list.")
+    await ctx.reply(f"Role '{role}' has been added to the permissions list for {user.mention}.")
 
 # Command to show current roles with permissions
 @bot.command(name="showroles", description="Show roles that have permissions for managing items.")
@@ -187,10 +162,10 @@ async def add_item(ctx, user: discord.User, *, item: str):
         user_inventories[user_id].append(item)
         save_inventories()
         logger = get_user_logger(user_id)
-        logger.info(f'Added {item} to inventory.')
+        logger.info(f'Added {item} to inventory by {ctx.author.display_name}.')
         embed = discord.Embed(
             title="Item Added",
-            description=f'Added {item} to {user.display_name}\'s inventory. Shiny!',
+            description=f'Added {item} to {user.display_name}\'s inventory by {ctx.author.display_name}. Shiny!',
             color=discord.Color.green()
         )
         await ctx.reply(embed=embed)
@@ -212,10 +187,10 @@ async def remove_item(ctx, user: discord.User, *, item: str):
             user_inventories[user_id].remove(item)
             save_inventories()
             logger = get_user_logger(user_id)
-            logger.info(f'Removed {item} from inventory.')
+            logger.info(f'Removed {item} from inventory by {ctx.author.display_name}.')
             embed = discord.Embed(
                 title="Item Removed",
-                description=f'Removed {item} from {user.display_name}\'s inventory. Poof, it\'s gone!',
+                description=f'Removed {item} from {user.display_name}\'s inventory by {ctx.author.display_name}. Poof, it\'s gone!',
                 color=discord.Color.red()
             )
             await ctx.reply(embed=embed)
@@ -248,11 +223,11 @@ async def trade(ctx, item: str, from_user: discord.User, to_user: discord.User):
         save_inventories()
         from_logger = get_user_logger(from_user_id)
         to_logger = get_user_logger(to_user_id)
-        from_logger.info(f'Traded {item} to {to_user.name}.')
-        to_logger.info(f'Received {item} from {from_user.name}.')
+        from_logger.info(f'Traded {item} to {to_user.name} by {ctx.author.display_name}.')
+        to_logger.info(f'Received {item} from {from_user.name} by {ctx.author.display_name}.')
         embed = discord.Embed(
             title="Item Traded",
-            description=f'Traded {item} from {from_user.display_name} to {to_user.display_name}. How generous!',
+            description=f'Traded {item} from {from_user.display_name} to {to_user.display_name} by {ctx.author.display_name}. How generous!',
             color=discord.Color.purple()
         )
         await ctx.reply(embed=embed)
@@ -264,9 +239,8 @@ async def trade(ctx, item: str, from_user: discord.User, to_user: discord.User):
         )
         await ctx.reply(embed=embed)
 
-# Command to view logs of a specific user
+# Command to view logs of a specific user (accessible by all users)
 @bot.command(name="viewlogs", description="Sneak a peek at someone's activity logs. Shhh, it's a secret!")
-@commands.has_permissions(manage_guild=True)
 async def viewlogs(ctx, user: discord.User):
     user_id = str(user.id)
     log_file_path = f'logs/{user_id}.log'
