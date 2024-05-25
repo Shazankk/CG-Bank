@@ -100,6 +100,7 @@ Developer
 This bot was developed by Shashank Goud.
 Email: shashaankgoud@gmail.com
 Ethereum Wallet: 0xf50fBB149Dccfcf1a57A516cCdfC663B6B4D5381
+Ronin Wallet: 0xf9efaba8813f228ea40f24dc8b143b82bc8e0b5a
 ```
 If you like the bot and would like to support the development or just want to buy me a coffee, feel free to send some ETH or NFTs to the above wallet address. Your support is greatly appreciated!
 
