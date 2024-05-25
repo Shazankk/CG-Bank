@@ -98,7 +98,47 @@ async def showhelp(ctx):
         elif command.name == "clearroles":
             example += ""
         embed.add_field(name=f"!{command.name}", value=f"{description}\n{example}", inline=False)
-    await ctx.reply(embed=embed)
+
+    # Dropdown menu
+    options = [
+        discord.SelectOption(label=command.name, description=command.description or "No description available")
+        for command in bot.commands
+    ]
+    select = discord.ui.Select(
+        placeholder="Select a command to get help",
+        options=options
+    )
+
+    # Callback for dropdown menu
+    async def callback(interaction):
+        selected_command = interaction.data['values'][0]
+        command = bot.get_command(selected_command)
+        description = command.description if command.description else "No description available"
+        example = f"Example: `!{command.name} `"
+        if command.name == "inv":
+            example += "@username or !inv"
+        elif command.name == "additem":
+            example += "@username item_name"
+        elif command.name == "removeitem":
+            example += "@username item_name"
+        elif command.name == "trade":
+            example += "item_name @from_user @to_user"
+        elif command.name == "viewlogs":
+            example += "@username"
+        elif command.name == "setrole":
+            example += "role_name"
+        elif command.name == "showroles":
+            example += ""
+        elif command.name == "clearroles":
+            example += ""
+        help_embed = discord.Embed(title=f"!{command.name}", description=f"{description}\n{example}", color=0x00ff00)
+        await interaction.response.edit_message(embed=help_embed, view=view)
+
+    select.callback = callback
+    view = discord.ui.View()
+    view.add_item(select)
+
+    await ctx.reply(embed=embed, view=view)
 
 # Command to set roles that have permissions
 @bot.command(name="setrole", description="Set roles that have permissions for managing items.")
