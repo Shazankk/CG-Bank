@@ -22,6 +22,18 @@ def get_user_logger(user_id):
         logger.setLevel(logging.INFO)
     return logger
 
+# Load roles from a JSON file
+def load_roles():
+    if os.path.exists('data/roles.json'):
+        with open('data/roles.json', 'r') as file:
+            return json.load(file)
+    return {"roles": []}
+
+# Save roles to a JSON file
+def save_roles(roles):
+    with open('data/roles.json', 'w') as file:
+        json.dump(roles, file, indent=4)
+
 # Load inventories from a JSON file
 def load_inventories():
     if os.path.exists('data/inventories.json'):
@@ -41,7 +53,8 @@ intents.message_content = True  # Enable message content intent
 # Create a bot instance with the specified intents
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Load inventories into memory
+# Load roles and inventories into memory
+role_data = load_roles()
 user_inventories = load_inventories()
 
 # Event handler for when the bot is ready
@@ -49,24 +62,66 @@ user_inventories = load_inventories()
 async def on_ready():
     print(f'Bot connected as {bot.user}')
 
-# Check if a user is a server moderator or owner
-def is_moderator(ctx):
-    return ctx.author.guild_permissions.manage_guild or ctx.author.guild_permissions.administrator
+# Check if a user has the necessary permissions
+def has_permission(ctx):
+    user_roles = [role.name for role in ctx.author.roles]
+    return (ctx.author.guild_permissions.manage_guild or
+            ctx.author.guild_permissions.administrator or
+            any(role in role_data["roles"] for role in user_roles))
 
-# Get the moderator role mention
-def get_moderator_role(ctx):
-    for role in ctx.guild.roles:
-        if role.name == "🚦 | MODERATOR":
-            return role.mention
-    return "@MODERATOR"
+# Get the role mentions
+def get_role_mentions(ctx):
+    mentions = [discord.utils.get(ctx.guild.roles, name=role).mention for role in role_data["roles"] if discord.utils.get(ctx.guild.roles, name=role)]
+    return ', '.join(mentions) if mentions else "@MODERATOR"
 
-# Command to list all commands with descriptions
-@bot.command(name="showhelp", description="List all commands with descriptions.")
+# Command to list all commands with descriptions and examples
+@bot.command(name="showhelp", description="List all commands with descriptions and examples.")
 async def showhelp(ctx):
     embed = discord.Embed(title="Command List", description="Here are all the available commands:", color=0x00ff00)
     for command in bot.commands:
-        embed.add_field(name=f"!{command}", value=command.description, inline=False)
+        description = command.description if command.description else "No description available"
+        example = f"Example: `!{command.name} `"
+        if command.name == "inv":
+            example += "@username or !inv"
+        elif command.name == "additem":
+            example += "@username item_name"
+        elif command.name == "removeitem":
+            example += "@username item_name"
+        elif command.name == "trade":
+            example += "item_name @from_user @to_user"
+        elif command.name == "viewlogs":
+            example += "@username"
+        elif command.name == "setrole":
+            example += "role_name"
+        elif command.name == "showroles":
+            example += ""
+        elif command.name == "clearroles":
+            example += ""
+        embed.add_field(name=f"!{command.name}", value=f"{description}\n{example}", inline=False)
     await ctx.reply(embed=embed)
+
+# Command to set roles that have permissions
+@bot.command(name="setrole", description="Set roles that have permissions for managing items.")
+@commands.has_permissions(administrator=True)
+async def setrole(ctx, *, role: str):
+    role_data["roles"].append(role)
+    save_roles(role_data)
+    await ctx.reply(f"Role '{role}' has been added to the permissions list.")
+
+# Command to show current roles with permissions
+@bot.command(name="showroles", description="Show roles that have permissions for managing items.")
+@commands.has_permissions(administrator=True)
+async def showroles(ctx):
+    roles = role_data["roles"]
+    await ctx.reply(f"Roles with permissions: {', '.join(roles) if roles else 'None'}")
+
+# Command to clear roles with permissions
+@bot.command(name="clearroles", description="Clear all roles that have permissions for managing items.")
+@commands.has_permissions(administrator=True)
+async def clearroles(ctx):
+    role_data["roles"].clear()
+    save_roles(role_data)
+    await ctx.reply("All roles have been cleared from the permissions list.")
 
 # Command to show inventory
 @bot.command(name="inv", description="Peek into someone's inventory, or your own if you're feeling nosy!")
@@ -82,76 +137,60 @@ async def inv(ctx, user: discord.User = None):
     )
     await ctx.reply(embed=embed)
 
-# Command to add an item to the inventory (only for moderators and server owner)
+# Command to add an item to the inventory (only for authorized users)
 @bot.command(name="additem", description="Add a shiny new item to someone's inventory.")
 async def add_item(ctx, user: discord.User, *, item: str):
-    if is_moderator(ctx):
-        try:
-            user_id = str(user.id)
-            if user_id not in user_inventories:
-                user_inventories[user_id] = []
-            user_inventories[user_id].append(item)
-            save_inventories()
-            logger = get_user_logger(user_id)
-            logger.info(f'Added {item} to inventory.')
-            embed = discord.Embed(
-                title="Item Added",
-                description=f'Added {item} to {user.display_name}\'s inventory. Shiny!',
-                color=discord.Color.green()
-            )
-            await ctx.reply(embed=embed)
-        except discord.ext.commands.errors.UserNotFound:
-            embed = discord.Embed(
-                title="User Not Found",
-                description=f"Could not find the user '{user}'. Please check the username and try again.",
-                color=discord.Color.red()
-            )
-            await ctx.reply(embed=embed)
+    if has_permission(ctx):
+        user_id = str(user.id)
+        if user_id not in user_inventories:
+            user_inventories[user_id] = []
+        user_inventories[user_id].append(item)
+        save_inventories()
+        logger = get_user_logger(user_id)
+        logger.info(f'Added {item} to inventory.')
+        embed = discord.Embed(
+            title="Item Added",
+            description=f'Added {item} to {user.display_name}\'s inventory. Shiny!',
+            color=discord.Color.green()
+        )
+        await ctx.reply(embed=embed)
     else:
-        moderator_role = get_moderator_role(ctx)
+        role_mentions = get_role_mentions(ctx)
         embed = discord.Embed(
             title="Permission Denied",
-            description=f"Oops! You don't have the power to add items. Better talk to a mod! {moderator_role}",
+            description=f"Oops! You don't have the power to add items. Better talk to a mod! {role_mentions}",
             color=discord.Color.red()
         )
         await ctx.reply(embed=embed)
 
-# Command to remove an item from the inventory (only for moderators and server owner)
+# Command to remove an item from the inventory (only for authorized users)
 @bot.command(name="removeitem", description="Remove an item from someone's inventory.")
 async def remove_item(ctx, user: discord.User, *, item: str):
-    if is_moderator(ctx):
-        try:
-            user_id = str(user.id)
-            if user_id in user_inventories and item in user_inventories[user_id]:
-                user_inventories[user_id].remove(item)
-                save_inventories()
-                logger = get_user_logger(user_id)
-                logger.info(f'Removed {item} from inventory.')
-                embed = discord.Embed(
-                    title="Item Removed",
-                    description=f'Removed {item} from {user.display_name}\'s inventory. Poof, it\'s gone!',
-                    color=discord.Color.red()
-                )
-                await ctx.reply(embed=embed)
-            else:
-                embed = discord.Embed(
-                    title="Item Not Found",
-                    description=f'{item} not found in {user.display_name}\'s inventory. Oops!',
-                    color=discord.Color.orange()
-                )
-                await ctx.reply(embed=embed)
-        except discord.ext.commands.errors.UserNotFound:
+    if has_permission(ctx):
+        user_id = str(user.id)
+        if user_id in user_inventories and item in user_inventories[user_id]:
+            user_inventories[user_id].remove(item)
+            save_inventories()
+            logger = get_user_logger(user_id)
+            logger.info(f'Removed {item} from inventory.')
             embed = discord.Embed(
-                title="User Not Found",
-                description=f"Could not find the user '{user}'. Please check the username and try again.",
+                title="Item Removed",
+                description=f'Removed {item} from {user.display_name}\'s inventory. Poof, it\'s gone!',
                 color=discord.Color.red()
             )
             await ctx.reply(embed=embed)
+        else:
+            embed = discord.Embed(
+                title="Item Not Found",
+                description=f'{item} not found in {user.display_name}\'s inventory. Oops!',
+                color=discord.Color.orange()
+            )
+            await ctx.reply(embed=embed)
     else:
-        moderator_role = get_moderator_role(ctx)
+        role_mentions = get_role_mentions(ctx)
         embed = discord.Embed(
             title="Permission Denied",
-            description=f"Nope! You can't remove items. Ask a mod for help! {moderator_role}",
+            description=f"Nope! You can't remove items. Ask a mod for help! {role_mentions}",
             color=discord.Color.red()
         )
         await ctx.reply(embed=embed)
