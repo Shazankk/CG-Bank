@@ -95,7 +95,7 @@ To run the bot, simply execute the following command:
 python inventory_bot.py
 ```
 
-Developer
+## Developer
 ```
 This bot was developed by Shashank Goud.
 Email: shashaankgoud@gmail.com
@@ -104,7 +104,7 @@ Ronin Wallet: 0xf9efaba8813f228ea40f24dc8b143b82bc8e0b5a
 ```
 If you like the bot and would like to support the development or just want to buy me a coffee, feel free to send some ETH or NFTs to the above wallet address. Your support is greatly appreciated!
 
-Support
+## Support
 
 If you encounter any issues or have any questions, feel free to reach out via email. Contributions to the project are also welcome!
 
