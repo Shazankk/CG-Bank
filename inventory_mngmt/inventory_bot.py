@@ -28,7 +28,7 @@ def load_roles():
     if os.path.exists('data/roles.json'):
         with open('data/roles.json', 'r') as file:
             return json.load(file)
-    return {"permissions": {}}
+    return {"permissions": {}, "mod_roles": []}
 
 # Save roles to a JSON file
 def save_roles(roles):
@@ -72,25 +72,31 @@ async def on_ready():
 
 # Check if a user has the necessary permissions
 def has_permission(ctx, command_name):
+    user_permissions = role_data["permissions"].get(str(ctx.author.id), [])
     if command_name in ["additem", "removeitem"]:
-        user_permissions = role_data["permissions"].get(str(ctx.author.id), [])
-        return command_name in user_permissions
+        return (
+            command_name in user_permissions or
+            any(role.id in role_data["mod_roles"] for role in ctx.author.roles) or
+            any(role.name == "🏆 CG Dev" for role in ctx.author.roles) or
+            ctx.author.guild_permissions.administrator
+        )
     return True
 
 # Get the role mentions
 def get_role_mentions(ctx):
-    return "@MODERATOR"
+    mod_roles = [f"<@&{role_id}>" for role_id in role_data["mod_roles"]]
+    return ", ".join(mod_roles) if mod_roles else "@MODERATOR"
 
 # Command to list all commands with descriptions and examples
 @bot.command(name="showhelp", description="List all commands with descriptions and examples.")
 async def showhelp(ctx):
-    embed = discord.Embed(title="CG Bank Commands", description="Here are all the available commands:", color=0x00ff00, thumbnail=get_logo_url())
+    embed = discord.Embed(title="CG Bank Commands", description="Here are all the available commands:", color=0x00ff00)
 
     # Group commands into categories
     categories = {
         "Inventory Commands": ["inv", "additem", "removeitem", "trade"],
-        "Admin Commands": ["giverole", "droprole"],
-        "Other Commands": ["viewlogs"]
+        "Admin Commands": ["assignmodrole", "removemodrole", "giverole", "droprole"],
+        "Other Commands": ["viewlogs", "showrole"]
     }
 
     colors = {
@@ -117,13 +123,22 @@ async def showhelp(ctx):
                     example += "item_name @from_user @to_user"
                 elif command.name == "viewlogs":
                     example += "@username"
+                elif command.name == "assignmodrole":
+                    example += "@role"
+                elif command.name == "removemodrole":
+                    example += "@role"
                 elif command.name == "giverole":
                     example += "@username @command"
                 elif command.name == "droprole":
                     example += "@username @command"
+                elif command.name == "showrole":
+                    example += ""
                 commands_description += f"**!{command.name}**\n{description}\n{example}\n\n"
         embed.add_field(name=f"**{category}**", value=commands_description, inline=True)
         embed.color = colors[category]
+
+    embed.set_thumbnail(url=get_logo_url())
+    embed.set_author(name="CG Bank", icon_url=get_logo_url())
 
     view = View()
     select = Select(placeholder="Select a command to see example", min_values=1, max_values=1)
@@ -145,10 +160,16 @@ async def showhelp(ctx):
                     example += "item_name @from_user @to_user"
                 elif command.name == "viewlogs":
                     example += "@username"
+                elif command.name == "assignmodrole":
+                    example += "@role"
+                elif command.name == "removemodrole":
+                    example += "@role"
                 elif command.name == "giverole":
                     example += "@username @command"
                 elif command.name == "droprole":
                     example += "@username @command"
+                elif command.name == "showrole":
+                    example += ""
                 select.add_option(label=label, description=description, value=example)
     
     async def select_callback(interaction):
@@ -190,6 +211,28 @@ async def droprole(ctx, user: discord.User, command_name: str):
     else:
         await ctx.reply(f"User {user.mention} does not have permission for `{command_name}`.")
 
+# Command to assign a mod role
+@bot.command(name="assignmodrole", description="Assign a custom mod role.")
+@commands.has_permissions(administrator=True)
+async def assignmodrole(ctx, role: discord.Role):
+    if role.id not in role_data["mod_roles"]:
+        role_data["mod_roles"].append(role.id)
+        save_roles(role_data)
+        await ctx.reply(f"Role {role.name} has been assigned as a mod role.")
+    else:
+        await ctx.reply(f"Role {role.name} is already a mod role.")
+
+# Command to remove a mod role
+@bot.command(name="removemodrole", description="Remove a custom mod role.")
+@commands.has_permissions(administrator=True)
+async def removemodrole(ctx, role: discord.Role):
+    if role.id in role_data["mod_roles"]:
+        role_data["mod_roles"].remove(role.id)
+        save_roles(role_data)
+        await ctx.reply(f"Role {role.name} has been removed from mod roles.")
+    else:
+        await ctx.reply(f"Role {role.name} is not a mod role.")
+
 # Command to show inventory
 @bot.command(name="inv", description="Peek into someone's inventory, or your own if you're feeling nosy!")
 async def inv(ctx, user: discord.User = None):
@@ -197,9 +240,10 @@ async def inv(ctx, user: discord.User = None):
         user = ctx.author  # Default to the command invoker if no user is specified
     user_id = str(user.id)
     inventory = user_inventories.get(user_id, [])
+    description = "\n".join([f"{i+1}. {item}" for i, item in enumerate(inventory)]) if inventory else 'No items found.'
     embed = discord.Embed(
         title=f"{user.display_name}'s Inventory",
-        description=', '.join(inventory) if inventory else 'No items found.',
+        description=description,
         color=discord.Color.blue()
     )
     embed.set_thumbnail(url=get_logo_url())
@@ -325,6 +369,32 @@ async def viewlogs(ctx, user: discord.User = None):
         embed.set_thumbnail(url=get_logo_url())
         await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
 
+# Command to show mod roles and the users with those roles
+@bot.command(name="showrole", description="Show all mod roles and the users with those roles.")
+async def showrole(ctx):
+    embed = discord.Embed(title="Mod Roles", description="Here are all the mod roles and the users with those roles:", color=0x00ff00)
+    guild = ctx.guild
+    mod_roles = list(set(role_data["mod_roles"]))  # Ensure no duplicates
+    
+    # Include CG Dev role explicitly if not already included
+    cg_dev_role = discord.utils.get(guild.roles, name="🏆 CG Dev")
+    if cg_dev_role and cg_dev_role.id not in mod_roles:
+        mod_roles.append(cg_dev_role.id)
+    
+    if not mod_roles:
+        embed.add_field(name="No Mod Roles", value="No mod roles have been assigned yet.", inline=False)
+    else:
+        for role_id in mod_roles:
+            role = guild.get_role(role_id)
+            if role:
+                members = [member.mention for member in role.members]
+                member_list = "\n".join(members) if members else "No members have this role."
+                embed.add_field(name=role.name, value=member_list, inline=False)
+            else:
+                embed.add_field(name="Role Not Found", value=f"Role with ID {role_id} not found.", inline=False)
+    embed.set_thumbnail(url=get_logo_url())
+    await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+
 # Error handler to show command usage when an error occurs
 @bot.event
 async def on_command_error(ctx, error):
@@ -346,6 +416,12 @@ async def on_command_error(ctx, error):
             example += "@username @command"
         elif command.name == "droprole":
             example += "@username @command"
+        elif command.name == "assignmodrole":
+            example += "@role"
+        elif command.name == "removemodrole":
+            example += "@role"
+        elif command.name == "showrole":
+            example += ""
         embed = discord.Embed(
             title=f"Usage: !{command.name}",
             description=f"{description}\n{example}",
@@ -353,8 +429,25 @@ async def on_command_error(ctx, error):
         )
         embed.set_thumbnail(url=get_logo_url())
         await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+    elif isinstance(error, commands.MissingPermissions):
+        embed = discord.Embed(
+            title="Permission Denied",
+            description=f"You are missing the necessary permissions to run this command.",
+            color=discord.Color.red()
+        )
+        embed.set_thumbnail(url=get_logo_url())
+        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
     else:
-        raise error
+        await showhelp(ctx)
+
+# Autocomplete functionality
+@bot.event
+async def on_message(message):
+    if message.content.startswith('!'):
+        context = await bot.get_context(message)
+        if context.command is None:
+            await showhelp(context)
+    await bot.process_commands(message)
 
 # Start the bot with your token
 bot.run(os.getenv("bot_token"))
