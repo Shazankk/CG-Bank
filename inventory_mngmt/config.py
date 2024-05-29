@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+
 import interactions
 
 # Initialize shared data
@@ -16,13 +17,24 @@ logo_path = os.path.join(os.getcwd(), 'assets', 'cgcg.png')
 
 # Function to get the logo URL
 def get_logo_url():
-    return "attachment://cgcg.png"
+    return logo_path
 
 # Function to get logger for a specific user
 def get_user_logger(user_id):
     logger = logging.getLogger(user_id)
     if not logger.hasHandlers():
         handler = logging.FileHandler(f'logs/{user_id}.log')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+    return logger
+
+# Function to get logger for bot actions by a specific user
+def get_bot_logger(user_id):
+    logger = logging.getLogger(f"bot_{user_id}")
+    if not logger.hasHandlers():
+        handler = logging.FileHandler(f'logs/bot_{user_id}.log')
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)

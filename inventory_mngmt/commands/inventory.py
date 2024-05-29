@@ -1,5 +1,5 @@
 import interactions
-from config import user_inventories, get_user_logger, get_logo_url, save_inventories, has_permission, get_role_mentions
+from config import user_inventories, get_user_logger, get_bot_logger, get_logo_url, save_inventories, has_permission, get_role_mentions
 
 # Command to show inventory
 @interactions.slash_command(
@@ -25,8 +25,8 @@ async def inv(ctx: interactions.SlashContext, user: interactions.User = None):
         description=description,
         color=0x0000ff
     )
-    embed.set_thumbnail(url=get_logo_url())
-    await ctx.send(embeds=[embed], ephemeral=True)
+    embed.set_thumbnail(url="attachment://cgcg.png")
+    await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
 
 # Command to add an item to the inventory (only for authorized users)
 @interactions.slash_command(
@@ -55,14 +55,16 @@ async def add_item(ctx: interactions.SlashContext, user: interactions.User, item
         user_inventories[user_id].append(item)
         save_inventories()
         logger = get_user_logger(user_id)
+        bot_logger = get_bot_logger(ctx.author.id)
         logger.info(f'Added {item} to {user.display_name}\'s inventory by {ctx.author.display_name}.')
+        bot_logger.info(f'Added {item} to {user.display_name}\'s inventory by {ctx.author.display_name}.')
         embed = interactions.Embed(
             title="Item Added",
             description=f'{ctx.author.display_name} added {item} to {user.display_name}\'s inventory. Shiny!',
             color=0x00ff00
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
     else:
         role_mentions = get_role_mentions(ctx.guild)
         embed = interactions.Embed(
@@ -70,8 +72,8 @@ async def add_item(ctx: interactions.SlashContext, user: interactions.User, item
             description=f"Oops! You don't have the power to add items. Better talk to a mod! {role_mentions}",
             color=0xff0000
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
 
 # Command to remove an item from the inventory (only for authorized users)
 @interactions.slash_command(
@@ -99,22 +101,24 @@ async def remove_item(ctx: interactions.SlashContext, user: interactions.User, i
             user_inventories[user_id].remove(item)
             save_inventories()
             logger = get_user_logger(user_id)
+            bot_logger = get_bot_logger(ctx.author.id)
             logger.info(f'{ctx.author.display_name} removed {item} from {user.display_name}\'s inventory.')
+            bot_logger.info(f'{ctx.author.display_name} removed {item} from {user.display_name}\'s inventory.')
             embed = interactions.Embed(
                 title="Item Removed",
                 description=f'{ctx.author.display_name} removed {item} from {user.display_name}\'s inventory. Poof, it\'s gone!',
                 color=0xff0000
             )
-            embed.set_thumbnail(url=get_logo_url())
-            await ctx.send(embeds=[embed], ephemeral=True)
+            embed.set_thumbnail(url="attachment://cgcg.png")
+            await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
         else:
             embed = interactions.Embed(
                 title="Item Not Found",
                 description=f'{item} not found in {user.display_name}\'s inventory. Oops!',
                 color=0xffa500
             )
-            embed.set_thumbnail(url=get_logo_url())
-            await ctx.send(embeds=[embed], ephemeral=True)
+            embed.set_thumbnail(url="attachment://cgcg.png")
+            await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
     else:
         role_mentions = get_role_mentions(ctx.guild)
         embed = interactions.Embed(
@@ -122,8 +126,8 @@ async def remove_item(ctx: interactions.SlashContext, user: interactions.User, i
             description=f"Nope! You can't remove items. Ask a mod for help! {role_mentions}",
             color=0xff0000
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
 
 # Command to trade an item between two users (available to all users)
 @interactions.slash_command(
@@ -161,20 +165,22 @@ async def trade(ctx: interactions.SlashContext, item: str, from_user: interactio
         save_inventories()
         from_logger = get_user_logger(from_user_id)
         to_logger = get_user_logger(to_user_id)
+        bot_logger = get_bot_logger(ctx.author.id)
         from_logger.info(f'{ctx.author.display_name} traded {item} to {to_user.display_name}.')
         to_logger.info(f'{ctx.author.display_name} received {item} from {from_user.display_name}.')
+        bot_logger.info(f'{ctx.author.display_name} traded {item} from {from_user.display_name} to {to_user.display_name}.')
         embed = interactions.Embed(
             title="Item Traded",
             description=f'{ctx.author.display_name} traded {item} from {from_user.display_name} to {to_user.display_name}. How generous!',
             color=0x800080
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
     else:
         embed = interactions.Embed(
             title="Trade Failed",
             description=f'{item} not found in {from_user.display_name}\'s inventory. No can do!',
             color=0xff0000
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)

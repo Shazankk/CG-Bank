@@ -1,6 +1,6 @@
-import interactions
-from config import role_data, get_logo_url, get_user_logger
 import os
+import interactions
+from config import role_data, get_logo_url, get_user_logger, get_bot_logger
 
 # Command to view logs of a specific user (accessible by all users)
 @interactions.slash_command(
@@ -28,16 +28,53 @@ async def viewlogs(ctx: interactions.SlashContext, user: interactions.User = Non
             description=f"```\n{logs}\n```",
             color=0xffd700
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
     else:
         embed = interactions.Embed(
             title="No Logs Found",
             description=f'No logs found for {user.display_name}. Seems squeaky clean!',
             color=0xff0000
         )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.send(embeds=[embed], ephemeral=True)
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+
+# Command to show all actions taken by a specific user via the bot
+@interactions.slash_command(
+    name="viewbotlogs",
+    description="View everything that happened via bot by a particular user.",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to view bot logs of",
+            type=interactions.OptionType.USER,
+            required=False
+        )
+    ]
+)
+async def viewbotlogs(ctx: interactions.SlashContext, user: interactions.User = None):
+    if user is None:
+        user = ctx.author  # Default to the command invoker if no user is specified
+    user_id = str(user.id)
+    log_file_path = f'logs/bot_{user_id}.log'
+    if os.path.exists(log_file_path):
+        with open(log_file_path, 'r') as log_file:
+            logs = log_file.read()
+        embed = interactions.Embed(
+            title=f"Bot Logs for {user.display_name}",
+            description=f"```\n{logs}\n```",
+            color=0xffd700
+        )
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+    else:
+        embed = interactions.Embed(
+            title="No Bot Logs Found",
+            description=f'No bot logs found for {user.display_name}.',
+            color=0xff0000
+        )
+        embed.set_thumbnail(url="attachment://cgcg.png")
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
 
 # Command to show mod roles and the users with those roles
 @interactions.slash_command(
@@ -79,8 +116,8 @@ async def showrole(ctx: interactions.SlashContext):
             specific_member_list = "\n".join(set(specific_permissions))  # Ensure no duplicates
             embed.add_field(name="Specific Command Permissions", value=specific_member_list, inline=False)
 
-    embed.set_thumbnail(url=get_logo_url())
-    await ctx.send(embeds=[embed], ephemeral=True)
+    embed.set_thumbnail(url="attachment://cgcg.png")
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
 
 # Command to list all commands with descriptions and examples
 @interactions.slash_command(
@@ -132,6 +169,10 @@ async def showhelp(ctx: interactions.SlashContext):
             "showrole": {
                 "description": "Show all mod roles and the users with those roles.",
                 "example": "/showrole"
+            },
+            "viewbotlogs": {
+                "description": "View everything that happened via bot by a particular user.",
+                "example": "/viewbotlogs @username"
             }
         }
     }
@@ -146,7 +187,7 @@ async def showhelp(ctx: interactions.SlashContext):
         if commands_description.strip():  # Ensure the field is not empty
             embed.add_field(name=f"**{category}**", value=commands_description, inline=True)
 
-    embed.set_thumbnail(url=get_logo_url())
-    embed.set_author(name="CG Bank", icon_url=get_logo_url())
+    embed.set_thumbnail(url="attachment://cgcg.png")
+    embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
 
-    await ctx.send(embeds=[embed], ephemeral=True)
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
