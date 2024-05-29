@@ -1,0 +1,12 @@
+{
+    "permissions": {
+        "135268911812837376": [
+            "additem",
+            "removeitem",
+            "additem",
+            "removeitem"
+        ],
+        "312017745367793664": []
+    },
+    "mod_roles": []
+}
