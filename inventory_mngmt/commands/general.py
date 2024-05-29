@@ -1,5 +1,6 @@
 import interactions
 from config import role_data, get_logo_url, get_user_logger
+import os
 
 # Command to view logs of a specific user (accessible by all users)
 @interactions.slash_command(
@@ -63,9 +64,10 @@ async def showrole(ctx: interactions.SlashContext):
 
     specific_permissions = []
     for user_id, permissions in role_data["permissions"].items():
-        member = guild.get_member(int(user_id))
-        if member:
-            specific_permissions.append(member.mention)
+        if permissions:  # Only include users with existing permissions
+            member = guild.get_member(int(user_id))
+            if member:
+                specific_permissions.append(member.mention)
 
     if not roles_and_permissions and not specific_permissions:
         embed.add_field(name="No Mod Roles", value="No mod roles have been assigned yet.", inline=False)
