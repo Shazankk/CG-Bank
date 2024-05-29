@@ -1,6 +1,4 @@
-import discord
-from discord.ext import commands
-from discord.ui import Select, View
+import interactions
 import logging
 import os
 import json
@@ -47,12 +45,8 @@ def save_inventories():
     with open('data/inventories.json', 'w') as file:
         json.dump(user_inventories, file, indent=4)
 
-# Define the intents for the bot
-intents = discord.Intents.all()
-intents.message_content = True  # Enable message content intent
-
-# Create a bot instance with the specified intents
-bot = commands.Bot(command_prefix='!', intents=intents)
+# Initialize bot
+bot = interactions.Client(token= os.getenv("bot_token"))
 
 # Load roles and inventories into memory
 role_data = load_roles()
@@ -65,128 +59,137 @@ logo_path = os.path.join(os.getcwd(), 'assets', 'cgcg.png')
 def get_logo_url():
     return "attachment://cgcg.png"
 
-# Event handler for when the bot is ready
-@bot.event
-async def on_ready():
-    print(f'Bot connected as {bot.user}')
-
 # Check if a user has the necessary permissions
-def has_permission(ctx, command_name):
+def has_permission(ctx: interactions.SlashContext, command_name: str):
     user_permissions = role_data["permissions"].get(str(ctx.author.id), [])
     if command_name in ["additem", "removeitem"]:
         return (
             command_name in user_permissions or
             any(role.id in role_data["mod_roles"] for role in ctx.author.roles) or
             any(role.name == "🏆 CG Dev" for role in ctx.author.roles) or
-            ctx.author.guild_permissions.administrator
+            ctx.author.permissions.administrator
         )
     return True
 
 # Get the role mentions
-def get_role_mentions(ctx):
+def get_role_mentions(guild):
     mod_roles = [f"<@&{role_id}>" for role_id in role_data["mod_roles"]]
     return ", ".join(mod_roles) if mod_roles else "@MODERATOR"
 
+# Event handler for bot ready
+@bot.event
+async def on_ready():
+    for guild in bot.guilds:
+        try:
+            await bot.sync_guild(guild.id)
+            print(f"Synced commands for guild: {guild.name} ({guild.id})")
+        except Exception as e:
+            print(f"Failed to sync commands for guild: {guild.name} ({guild.id}). Error: {e}")
+    print(f"Logged in as {bot.user}")
+
 # Command to list all commands with descriptions and examples
-@bot.command(name="showhelp", description="List all commands with descriptions and examples.")
-async def showhelp(ctx):
-    embed = discord.Embed(title="CG Bank Commands", description="Here are all the available commands:", color=0x00ff00)
+@interactions.slash_command(
+    name="showhelp",
+    description="List all commands with descriptions and examples."
+)
+async def showhelp(ctx: interactions.SlashContext):
+    embed = interactions.Embed(
+        title="CG Bank Commands",
+        description="Here are all the available commands:",
+        color=0x00ff00
+    )
 
     # Group commands into categories
     categories = {
-        "Inventory Commands": ["inv", "additem", "removeitem", "trade"],
-        "Admin Commands": ["assignmodrole", "removemodrole", "giverole", "droprole"],
-        "Other Commands": ["viewlogs", "showrole"]
-    }
-
-    colors = {
-        "Inventory Commands": discord.Color.blue(),
-        "Admin Commands": discord.Color.red(),
-        "Other Commands": discord.Color.green()
+        "Inventory Commands": {
+            "inv": {
+                "description": "Peek into someone's inventory, or your own if you're feeling nosy!",
+                "example": "/inv @username or /inv"
+            },
+            "additem": {
+                "description": "Add a shiny new item to someone's inventory.",
+                "example": "/additem @username item_name"
+            },
+            "removeitem": {
+                "description": "Remove an item from someone's inventory.",
+                "example": "/removeitem @username item_name"
+            },
+            "trade": {
+                "description": "Trade an item from one user to another. Sharing is caring!",
+                "example": "/trade item_name @from_user @to_user"
+            }
+        },
+        "Admin Commands": {
+            "assignmodrole": {
+                "description": "Assign a custom mod role.",
+                "example": "/assignmodrole @role"
+            },
+            "removemodrole": {
+                "description": "Remove a custom mod role.",
+                "example": "/removemodrole @role"
+            },
+            "giverole": {
+                "description": "Give a user permission for a specific command.",
+                "example": "/giverole @username @command"
+            },
+            "droprole": {
+                "description": "Remove a user's permission for a specific command.",
+                "example": "/droprole @username @command"
+            }
+        },
+        "Other Commands": {
+            "viewlogs": {
+                "description": "Sneak a peek at someone's activity logs. Shhh, it's a secret!",
+                "example": "/viewlogs @username"
+            },
+            "showrole": {
+                "description": "Show all mod roles and the users with those roles.",
+                "example": "/showrole"
+            }
+        }
     }
 
     # Format commands for each category
-    for category, commands_list in categories.items():
+    for category, commands_dict in categories.items():
         commands_description = ""
-        for command_name in commands_list:
-            command = bot.get_command(command_name)
-            if command:
-                description = command.description if command.description else "No description available"
-                example = f"Example: `!{command.name} `"
-                if command.name == "inv":
-                    example += "@username or !inv"
-                elif command.name == "additem":
-                    example += "@username item_name"
-                elif command.name == "removeitem":
-                    example += "@username item_name"
-                elif command.name == "trade":
-                    example += "item_name @from_user @to_user"
-                elif command.name == "viewlogs":
-                    example += "@username"
-                elif command.name == "assignmodrole":
-                    example += "@role"
-                elif command.name == "removemodrole":
-                    example += "@role"
-                elif command.name == "giverole":
-                    example += "@username @command"
-                elif command.name == "droprole":
-                    example += "@username @command"
-                elif command.name == "showrole":
-                    example += ""
-                commands_description += f"**!{command.name}**\n{description}\n{example}\n\n"
-        embed.add_field(name=f"**{category}**", value=commands_description, inline=True)
-        embed.color = colors[category]
+        for command_name, command_info in commands_dict.items():
+            description = command_info["description"]
+            example = command_info["example"]
+            commands_description += f"**/{command_name}**\n{description}\n*Usage:* `{example}`\n\n"
+        if commands_description.strip():  # Ensure the field is not empty
+            embed.add_field(name=f"**{category}**", value=commands_description, inline=True)
 
     embed.set_thumbnail(url=get_logo_url())
     embed.set_author(name="CG Bank", icon_url=get_logo_url())
 
-    view = View()
-    select = Select(placeholder="Select a command to see example", min_values=1, max_values=1)
-    
-    for category, commands_list in categories.items():
-        for command_name in commands_list:
-            command = bot.get_command(command_name)
-            if command:
-                label = f"!{command.name}"
-                description = command.description if command.description else "No description available"
-                example = f"!{command.name} "
-                if command.name == "inv":
-                    example += "@username or !inv"
-                elif command.name == "additem":
-                    example += "@username item_name"
-                elif command.name == "removeitem":
-                    example += "@username item_name"
-                elif command.name == "trade":
-                    example += "item_name @from_user @to_user"
-                elif command.name == "viewlogs":
-                    example += "@username"
-                elif command.name == "assignmodrole":
-                    example += "@role"
-                elif command.name == "removemodrole":
-                    example += "@role"
-                elif command.name == "giverole":
-                    example += "@username @command"
-                elif command.name == "droprole":
-                    example += "@username @command"
-                elif command.name == "showrole":
-                    example += ""
-                select.add_option(label=label, description=description, value=example)
-    
-    async def select_callback(interaction):
-        selected_value = select.values[0]
-        await interaction.response.send_message(f"`{selected_value}`", ephemeral=False)
-    
-    select.callback = select_callback
-    view.add_item(select)
-
-    await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed, view=view)
+    await ctx.send(embeds=[embed], ephemeral=True)
 
 # Command to give a user permission for a specific command
-@bot.command(name="giverole", description="Give a user permission for a specific command.")
-@commands.has_permissions(administrator=True)
-async def giverole(ctx, user: discord.User, command_name: str):
-    if command_name not in ["additem", "removeitem"]:
-        await ctx.reply(f"Invalid command name: {command_name}")
+@interactions.slash_command(
+    name="giverole",
+    description="Give a user permission for a specific command.",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to give permission to",
+            type=interactions.OptionType.USER,
+            required=True
+        ),
+        interactions.SlashCommandOption(
+            name="command_name",
+            description="Command to give permission for",
+            type=interactions.OptionType.STRING,
+            required=True,
+            choices=[
+                interactions.SlashCommandChoice(name="additem", value="additem"),
+                interactions.SlashCommandChoice(name="removeitem", value="removeitem")
+            ]
+        )
+    ]
+)
+async def giverole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
+    if not ctx.author.permissions.administrator:
+        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=True)
         return
 
     if str(user.id) not in role_data["permissions"]:
@@ -194,64 +197,140 @@ async def giverole(ctx, user: discord.User, command_name: str):
     
     role_data["permissions"][str(user.id)].append(command_name)
     save_roles(role_data)
-    await ctx.reply(f"User {user.mention} has been given permission to use `{command_name}`.")
+    await ctx.send(f"User {user.mention} has been given permission to use `{command_name}`.", ephemeral=True)
 
 # Command to remove a user's permission for a specific command
-@bot.command(name="droprole", description="Remove a user's permission for a specific command.")
-@commands.has_permissions(administrator=True)
-async def droprole(ctx, user: discord.User, command_name: str):
-    if command_name not in ["additem", "removeitem"]:
-        await ctx.reply(f"Invalid command name: {command_name}")
+@interactions.slash_command(
+    name="droprole",
+    description="Remove a user's permission for a specific command.",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to remove permission from",
+            type=interactions.OptionType.USER,
+            required=True
+        ),
+        interactions.SlashCommandOption(
+            name="command_name",
+            description="Command to remove permission for",
+            type=interactions.OptionType.STRING,
+            required=True,
+            choices=[
+                interactions.SlashCommandChoice(name="additem", value="additem"),
+                interactions.SlashCommandChoice(name="removeitem", value="removeitem")
+            ]
+        )
+    ]
+)
+async def droprole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
+    if not ctx.author.permissions.administrator:
+        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=True)
         return
 
     if str(user.id) in role_data["permissions"] and command_name in role_data["permissions"][str(user.id)]:
         role_data["permissions"][str(user.id)].remove(command_name)
         save_roles(role_data)
-        await ctx.reply(f"User {user.mention}'s permission to use `{command_name}` has been removed.")
+        await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=True)
     else:
-        await ctx.reply(f"User {user.mention} does not have permission for `{command_name}`.")
+        await ctx.send(f"User {user.mention} does not have permission for `{command_name}`.", ephemeral=True)
 
 # Command to assign a mod role
-@bot.command(name="assignmodrole", description="Assign a custom mod role.")
-@commands.has_permissions(administrator=True)
-async def assignmodrole(ctx, role: discord.Role):
+@interactions.slash_command(
+    name="assignmodrole",
+    description="Assign a custom mod role.",
+    options=[
+        interactions.SlashCommandOption(
+            name="role",
+            description="Role to assign as mod",
+            type=interactions.OptionType.ROLE,
+            required=True
+        )
+    ]
+)
+async def assignmodrole(ctx: interactions.SlashContext, role: interactions.Role):
+    if not ctx.author.permissions.administrator:
+        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=True)
+        return
+
     if role.id not in role_data["mod_roles"]:
         role_data["mod_roles"].append(role.id)
         save_roles(role_data)
-        await ctx.reply(f"Role {role.name} has been assigned as a mod role.")
+        await ctx.send(f"Role {role.name} has been assigned as a mod role.", ephemeral=True)
     else:
-        await ctx.reply(f"Role {role.name} is already a mod role.")
+        await ctx.send(f"Role {role.name} is already a mod role.", ephemeral=True)
 
 # Command to remove a mod role
-@bot.command(name="removemodrole", description="Remove a custom mod role.")
-@commands.has_permissions(administrator=True)
-async def removemodrole(ctx, role: discord.Role):
+@interactions.slash_command(
+    name="removemodrole",
+    description="Remove a custom mod role.",
+    options=[
+        interactions.SlashCommandOption(
+            name="role",
+            description="Role to remove from mod",
+            type=interactions.OptionType.ROLE,
+            required=True
+        )
+    ]
+)
+async def removemodrole(ctx: interactions.SlashContext, role: interactions.Role):
+    if not ctx.author.permissions.administrator:
+        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=True)
+        return
+
     if role.id in role_data["mod_roles"]:
         role_data["mod_roles"].remove(role.id)
         save_roles(role_data)
-        await ctx.reply(f"Role {role.name} has been removed from mod roles.")
+        await ctx.send(f"Role {role.name} has been removed from mod roles.", ephemeral=True)
     else:
-        await ctx.reply(f"Role {role.name} is not a mod role.")
+        await ctx.send(f"Role {role.name} is not a mod role.", ephemeral=True)
 
 # Command to show inventory
-@bot.command(name="inv", description="Peek into someone's inventory, or your own if you're feeling nosy!")
-async def inv(ctx, user: discord.User = None):
+@interactions.slash_command(
+    name="inv",
+    description="Peek into someone's inventory, or your own if you're feeling nosy!",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to view inventory of",
+            type=interactions.OptionType.USER,
+            required=False
+        )
+    ]
+)
+async def inv(ctx: interactions.SlashContext, user: interactions.User = None):
     if user is None:
         user = ctx.author  # Default to the command invoker if no user is specified
     user_id = str(user.id)
     inventory = user_inventories.get(user_id, [])
     description = "\n".join([f"{i+1}. {item}" for i, item in enumerate(inventory)]) if inventory else 'No items found.'
-    embed = discord.Embed(
+    embed = interactions.Embed(
         title=f"{user.display_name}'s Inventory",
         description=description,
-        color=discord.Color.blue()
+        color=0x0000ff
     )
     embed.set_thumbnail(url=get_logo_url())
-    await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+    await ctx.send(embeds=[embed], ephemeral=True)
 
 # Command to add an item to the inventory (only for authorized users)
-@bot.command(name="additem", description="Add a shiny new item to someone's inventory.")
-async def add_item(ctx, user: discord.User, *, item: str):
+@interactions.slash_command(
+    name="additem",
+    description="Add a shiny new item to someone's inventory.",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to add item to",
+            type=interactions.OptionType.USER,
+            required=True
+        ),
+        interactions.SlashCommandOption(
+            name="item",
+            description="Item to add",
+            type=interactions.OptionType.STRING,
+            required=True
+        )
+    ]
+)
+async def add_item(ctx: interactions.SlashContext, user: interactions.User, item: str):
     if has_permission(ctx, "additem"):
         user_id = str(user.id)
         if user_id not in user_inventories:
@@ -260,26 +339,43 @@ async def add_item(ctx, user: discord.User, *, item: str):
         save_inventories()
         logger = get_user_logger(user_id)
         logger.info(f'Added {item} to {user.display_name}\'s inventory by {ctx.author.display_name}.')
-        embed = discord.Embed(
+        embed = interactions.Embed(
             title="Item Added",
             description=f'{ctx.author.display_name} added {item} to {user.display_name}\'s inventory. Shiny!',
-            color=discord.Color.green()
+            color=0x00ff00
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
     else:
-        role_mentions = get_role_mentions(ctx)
-        embed = discord.Embed(
+        role_mentions = get_role_mentions(ctx.guild)
+        embed = interactions.Embed(
             title="Permission Denied",
             description=f"Oops! You don't have the power to add items. Better talk to a mod! {role_mentions}",
-            color=discord.Color.red()
+            color=0xff0000
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
 
 # Command to remove an item from the inventory (only for authorized users)
-@bot.command(name="removeitem", description="Remove an item from someone's inventory.")
-async def remove_item(ctx, user: discord.User, *, item: str):
+@interactions.slash_command(
+    name="removeitem",
+    description="Remove an item from someone's inventory.",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to remove item from",
+            type=interactions.OptionType.USER,
+            required=True
+        ),
+        interactions.SlashCommandOption(
+            name="item",
+            description="Item to remove",
+            type=interactions.OptionType.STRING,
+            required=True
+        )
+    ]
+)
+async def remove_item(ctx: interactions.SlashContext, user: interactions.User, item: str):
     if has_permission(ctx, "removeitem"):
         user_id = str(user.id)
         if user_id in user_inventories and item in user_inventories[user_id]:
@@ -287,34 +383,57 @@ async def remove_item(ctx, user: discord.User, *, item: str):
             save_inventories()
             logger = get_user_logger(user_id)
             logger.info(f'{ctx.author.display_name} removed {item} from {user.display_name}\'s inventory.')
-            embed = discord.Embed(
+            embed = interactions.Embed(
                 title="Item Removed",
                 description=f'{ctx.author.display_name} removed {item} from {user.display_name}\'s inventory. Poof, it\'s gone!',
-                color=discord.Color.red()
+                color=0xff0000
             )
             embed.set_thumbnail(url=get_logo_url())
-            await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+            await ctx.send(embeds=[embed], ephemeral=True)
         else:
-            embed = discord.Embed(
+            embed = interactions.Embed(
                 title="Item Not Found",
                 description=f'{item} not found in {user.display_name}\'s inventory. Oops!',
-                color=discord.Color.orange()
+                color=0xffa500
             )
             embed.set_thumbnail(url=get_logo_url())
-            await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+            await ctx.send(embeds=[embed], ephemeral=True)
     else:
-        role_mentions = get_role_mentions(ctx)
-        embed = discord.Embed(
+        role_mentions = get_role_mentions(ctx.guild)
+        embed = interactions.Embed(
             title="Permission Denied",
             description=f"Nope! You can't remove items. Ask a mod for help! {role_mentions}",
-            color=discord.Color.red()
+            color=0xff0000
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
 
 # Command to trade an item between two users (available to all users)
-@bot.command(name="trade", description="Trade an item from one user to another. Sharing is caring!")
-async def trade(ctx, item: str, from_user: discord.User, to_user: discord.User):
+@interactions.slash_command(
+    name="trade",
+    description="Trade an item from one user to another. Sharing is caring!",
+    options=[
+        interactions.SlashCommandOption(
+            name="item",
+            description="Item to trade",
+            type=interactions.OptionType.STRING,
+            required=True
+        ),
+        interactions.SlashCommandOption(
+            name="from_user",
+            description="User to trade from",
+            type=interactions.OptionType.USER,
+            required=True
+        ),
+        interactions.SlashCommandOption(
+            name="to_user",
+            description="User to trade to",
+            type=interactions.OptionType.USER,
+            required=True
+        )
+    ]
+)
+async def trade(ctx: interactions.SlashContext, item: str, from_user: interactions.User, to_user: interactions.User):
     from_user_id = str(from_user.id)
     to_user_id = str(to_user.id)
     if from_user_id in user_inventories and item in user_inventories[from_user_id]:
@@ -327,25 +446,36 @@ async def trade(ctx, item: str, from_user: discord.User, to_user: discord.User):
         to_logger = get_user_logger(to_user_id)
         from_logger.info(f'{ctx.author.display_name} traded {item} to {to_user.name}.')
         to_logger.info(f'{ctx.author.display_name} received {item} from {from_user.name}.')
-        embed = discord.Embed(
+        embed = interactions.Embed(
             title="Item Traded",
             description=f'{ctx.author.display_name} traded {item} from {from_user.display_name} to {to_user.display_name}. How generous!',
-            color=discord.Color.purple()
+            color=0x800080
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
     else:
-        embed = discord.Embed(
+        embed = interactions.Embed(
             title="Trade Failed",
             description=f'{item} not found in {from_user.display_name}\'s inventory. No can do!',
-            color=discord.Color.red()
+            color=0xff0000
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
 
 # Command to view logs of a specific user (accessible by all users)
-@bot.command(name="viewlogs", description="Sneak a peek at someone's activity logs. Shhh, it's a secret!")
-async def viewlogs(ctx, user: discord.User = None):
+@interactions.slash_command(
+    name="viewlogs",
+    description="Sneak a peek at someone's activity logs. Shhh, it's a secret!",
+    options=[
+        interactions.SlashCommandOption(
+            name="user",
+            description="User to view logs of",
+            type=interactions.OptionType.USER,
+            required=False
+        )
+    ]
+)
+async def viewlogs(ctx: interactions.SlashContext, user: interactions.User = None):
     if user is None:
         user = ctx.author  # Default to the command invoker if no user is specified
     user_id = str(user.id)
@@ -353,31 +483,34 @@ async def viewlogs(ctx, user: discord.User = None):
     if os.path.exists(log_file_path):
         with open(log_file_path, 'r') as log_file:
             logs = log_file.read()
-        embed = discord.Embed(
+        embed = interactions.Embed(
             title=f"Logs for {user.display_name}",
             description=f"```\n{logs}\n```",
-            color=discord.Color.gold()
+            color=0xffd700
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
     else:
-        embed = discord.Embed(
+        embed = interactions.Embed(
             title="No Logs Found",
             description=f'No logs found for {user.display_name}. Seems squeaky clean!',
-            color=discord.Color.red()
+            color=0xff0000
         )
         embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+        await ctx.send(embeds=[embed], ephemeral=True)
 
 # Command to show mod roles and the users with those roles
-@bot.command(name="showrole", description="Show all mod roles and the users with those roles.")
-async def showrole(ctx):
-    embed = discord.Embed(title="Mod Roles", description="Here are all the mod roles and the users with those roles:", color=0x00ff00)
+@interactions.slash_command(
+    name="showrole",
+    description="Show all mod roles and the users with those roles."
+)
+async def showrole(ctx: interactions.SlashContext):
+    embed = interactions.Embed(title="Mod Roles", description="Here are all the mod roles and the users with those roles:", color=0x00ff00)
     guild = ctx.guild
     mod_roles = list(set(role_data["mod_roles"]))  # Ensure no duplicates
     
     # Include CG Dev role explicitly if not already included
-    cg_dev_role = discord.utils.get(guild.roles, name="🏆 CG Dev")
+    cg_dev_role = next((role for role in guild.roles if role.name == "🏆 CG Dev"), None)
     if cg_dev_role and cg_dev_role.id not in mod_roles:
         mod_roles.append(cg_dev_role.id)
     
@@ -393,61 +526,7 @@ async def showrole(ctx):
             else:
                 embed.add_field(name="Role Not Found", value=f"Role with ID {role_id} not found.", inline=False)
     embed.set_thumbnail(url=get_logo_url())
-    await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
+    await ctx.send(embeds=[embed], ephemeral=True)
 
-# Error handler to show command usage when an error occurs
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.BadArgument):
-        command = ctx.command
-        description = command.description if command.description else "No description available"
-        example = f"Example: `!{command.name} `"
-        if command.name == "inv":
-            example += "@username or !inv"
-        elif command.name == "additem":
-            example += "@username item_name"
-        elif command.name == "removeitem":
-            example += "@username item_name"
-        elif command.name == "trade":
-            example += "item_name @from_user @to_user"
-        elif command.name == "viewlogs":
-            example += "@username"
-        elif command.name == "giverole":
-            example += "@username @command"
-        elif command.name == "droprole":
-            example += "@username @command"
-        elif command.name == "assignmodrole":
-            example += "@role"
-        elif command.name == "removemodrole":
-            example += "@role"
-        elif command.name == "showrole":
-            example += ""
-        embed = discord.Embed(
-            title=f"Usage: !{command.name}",
-            description=f"{description}\n{example}",
-            color=discord.Color.orange()
-        )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
-    elif isinstance(error, commands.MissingPermissions):
-        embed = discord.Embed(
-            title="Permission Denied",
-            description=f"You are missing the necessary permissions to run this command.",
-            color=discord.Color.red()
-        )
-        embed.set_thumbnail(url=get_logo_url())
-        await ctx.reply(file=discord.File(logo_path, filename='cgcg.png'), embed=embed)
-    else:
-        await showhelp(ctx)
-
-# Autocomplete functionality
-@bot.event
-async def on_message(message):
-    if message.content.startswith('!'):
-        context = await bot.get_context(message)
-        if context.command is None:
-            await showhelp(context)
-    await bot.process_commands(message)
-
-# Start the bot with your token
-bot.run(os.getenv("bot_token"))
+# Run the bot
+bot.start()
