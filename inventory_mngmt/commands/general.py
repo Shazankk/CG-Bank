@@ -191,3 +191,30 @@ async def showhelp(ctx: interactions.SlashContext):
     embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
 
     await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+
+@interactions.slash_command(
+    name="cgpass",
+    description="Get information about the CG Pass rewards."
+)
+async def cgpass(ctx: interactions.SlashContext):
+    embed = interactions.Embed(
+        title="CG Pass Rewards",
+        description=(
+            "Congratulations! With the CG Pass, you get the following rewards:\n\n"
+            "**1. Access to [Giveaways](https://discord.com/channels/881509696882757643/961320997468926002) channel**\n\n"
+            "**2. 8 Half-Cut Trees**\n"
+            "🌳🌳🌳🌳🌳🌳🌳🌳\n\n"
+            "**3. 8 3h Mill Boosts**\n"
+            "⏳⏳⏳⏳⏳⏳⏳⏳\n\n"
+            "**4. 8 3h Industry Boosts**\n"
+            "🏭🏭🏭🏭🏭🏭🏭🏭"
+        ),
+        color=0x00ff00
+    )
+    
+    embed.set_thumbnail(url="attachment://cgcg.png")
+    embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
+
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+
+

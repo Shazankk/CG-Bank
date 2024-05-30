@@ -25,7 +25,7 @@ async def on_ready():
 # Import commands after bot initialization
 from commands.inventory import inv, add_item, remove_item, trade
 from commands.admin import giverole, droprole
-from commands.general import viewlogs, showrole, showhelp, viewbotlogs
+from commands.general import viewlogs, showrole, showhelp, viewbotlogs, cgpass
 
 # Register commands (decorators handle this part automatically)
 
