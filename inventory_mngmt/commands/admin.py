@@ -27,7 +27,7 @@ from config import role_data, save_roles, get_logo_url
 async def giverole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
     member = ctx.guild.get_member(ctx.author.id)
     if not member:
-        await ctx.send("You are not a member of this guild.", ephemeral=True)
+        await ctx.send("You are not a member of this guild.", ephemeral=False)
         return
 
     # Check if the user has the necessary permissions
@@ -36,7 +36,7 @@ async def giverole(ctx: interactions.SlashContext, user: interactions.User, comm
         any(role.id in role_data["mod_roles"] for role in member.roles) or
         any(role.name == "🏆 CG Dev" for role in member.roles)
     ):
-        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=True)
+        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=False)
         return
 
     if str(user.id) not in role_data["permissions"]:
@@ -44,7 +44,7 @@ async def giverole(ctx: interactions.SlashContext, user: interactions.User, comm
     
     role_data["permissions"][str(user.id)].append(command_name)
     save_roles(role_data)
-    await ctx.send(f"User {user.mention} has been given permission to use `{command_name}`.", ephemeral=True)
+    await ctx.send(f"User {user.mention} has been given permission to use `{command_name}`.", ephemeral=False)
 
 # Command to remove a user's permission for a specific command
 @interactions.slash_command(
@@ -72,7 +72,7 @@ async def giverole(ctx: interactions.SlashContext, user: interactions.User, comm
 async def droprole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
     member = ctx.guild.get_member(ctx.author.id)
     if not member:
-        await ctx.send("You are not a member of this guild.", ephemeral=True)
+        await ctx.send("You are not a member of this guild.", ephemeral=False)
         return
 
     # Check if the user has the necessary permissions
@@ -81,12 +81,12 @@ async def droprole(ctx: interactions.SlashContext, user: interactions.User, comm
         any(role.id in role_data["mod_roles"] for role in member.roles) or
         any(role.name == "🏆 CG Dev" for role in member.roles)
     ):
-        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=True)
+        await ctx.send("You are missing the necessary permissions to run this command.", ephemeral=False)
         return
 
     if str(user.id) in role_data["permissions"] and command_name in role_data["permissions"][str(user.id)]:
         role_data["permissions"][str(user.id)].remove(command_name)
         save_roles(role_data)
-        await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=True)
+        await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=False)
     else:
-        await ctx.send(f"User {user.mention} does not have permission for `{command_name}`.", ephemeral=True)
+        await ctx.send(f"User {user.mention} does not have permission for `{command_name}`.", ephemeral=False)

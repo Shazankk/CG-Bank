@@ -29,7 +29,7 @@ async def viewlogs(ctx: interactions.SlashContext, user: interactions.User = Non
             color=0xffd700
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
     else:
         embed = interactions.Embed(
             title="No Logs Found",
@@ -37,7 +37,7 @@ async def viewlogs(ctx: interactions.SlashContext, user: interactions.User = Non
             color=0xff0000
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 # Command to show all actions taken by a specific user via the bot
 @interactions.slash_command(
@@ -66,7 +66,7 @@ async def viewbotlogs(ctx: interactions.SlashContext, user: interactions.User = 
             color=0xffd700
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
     else:
         embed = interactions.Embed(
             title="No Bot Logs Found",
@@ -74,7 +74,7 @@ async def viewbotlogs(ctx: interactions.SlashContext, user: interactions.User = 
             color=0xff0000
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 # Command to show mod roles and the users with those roles
 @interactions.slash_command(
@@ -117,7 +117,7 @@ async def showrole(ctx: interactions.SlashContext):
             embed.add_field(name="Specific Command Permissions", value=specific_member_list, inline=False)
 
     embed.set_thumbnail(url="attachment://cgcg.png")
-    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 # Command to list all commands with descriptions and examples
 @interactions.slash_command(
@@ -185,12 +185,12 @@ async def showhelp(ctx: interactions.SlashContext):
             example = command_info["example"]
             commands_description += f"**/{command_name}**\n{description}\n*Usage:* `{example}`\n\n"
         if commands_description.strip():  # Ensure the field is not empty
-            embed.add_field(name=f"**{category}**", value=commands_description, inline=True)
+            embed.add_field(name=f"**{category}**", value=commands_description, inline=False)
 
     embed.set_thumbnail(url="attachment://cgcg.png")
     embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
 
-    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 @interactions.slash_command(
     name="cgpass",
@@ -207,7 +207,8 @@ async def cgpass(ctx: interactions.SlashContext):
             "**3. 8 3h Mill Boosts**\n"
             "⏳⏳⏳⏳⏳⏳⏳⏳\n\n"
             "**4. 8 3h Industry Boosts**\n"
-            "🏭🏭🏭🏭🏭🏭🏭🏭"
+            "🏭🏭🏭🏭🏭🏭🏭🏭\n\n"
+            "**We are available on [OpenSea](https://opensea.io/assets/matic/0x1cd70c8c8bac5fb395f2c5dd5f25859ab9b446c0/1)**"
         ),
         color=0x00ff00
     )
@@ -215,6 +216,6 @@ async def cgpass(ctx: interactions.SlashContext):
     embed.set_thumbnail(url="attachment://cgcg.png")
     embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
 
-    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=True)
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 

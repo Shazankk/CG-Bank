@@ -26,7 +26,7 @@ async def inv(ctx: interactions.SlashContext, user: interactions.User = None):
         color=0x0000ff
     )
     embed.set_thumbnail(url="attachment://cgcg.png")
-    await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+    await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
 
 # Command to add an item to the inventory (only for authorized users)
 @interactions.slash_command(
@@ -64,7 +64,7 @@ async def add_item(ctx: interactions.SlashContext, user: interactions.User, item
             color=0x00ff00
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
     else:
         role_mentions = get_role_mentions(ctx.guild)
         embed = interactions.Embed(
@@ -73,7 +73,7 @@ async def add_item(ctx: interactions.SlashContext, user: interactions.User, item
             color=0xff0000
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
 
 # Command to remove an item from the inventory (only for authorized users)
 @interactions.slash_command(
@@ -110,7 +110,7 @@ async def remove_item(ctx: interactions.SlashContext, user: interactions.User, i
                 color=0xff0000
             )
             embed.set_thumbnail(url="attachment://cgcg.png")
-            await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+            await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
         else:
             embed = interactions.Embed(
                 title="Item Not Found",
@@ -118,7 +118,7 @@ async def remove_item(ctx: interactions.SlashContext, user: interactions.User, i
                 color=0xffa500
             )
             embed.set_thumbnail(url="attachment://cgcg.png")
-            await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+            await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
     else:
         role_mentions = get_role_mentions(ctx.guild)
         embed = interactions.Embed(
@@ -127,7 +127,7 @@ async def remove_item(ctx: interactions.SlashContext, user: interactions.User, i
             color=0xff0000
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
 
 # Command to trade an item between two users (available to all users)
 @interactions.slash_command(
@@ -175,7 +175,7 @@ async def trade(ctx: interactions.SlashContext, item: str, from_user: interactio
             color=0x800080
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
     else:
         embed = interactions.Embed(
             title="Trade Failed",
@@ -183,4 +183,4 @@ async def trade(ctx: interactions.SlashContext, item: str, from_user: interactio
             color=0xff0000
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=True)
+        await ctx.send(embeds=[embed], files=[interactions.File(fp=open(get_logo_url(), 'rb'), filename="cgcg.png")], ephemeral=False)
