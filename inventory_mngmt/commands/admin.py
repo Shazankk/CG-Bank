@@ -89,4 +89,4 @@ async def droprole(ctx: interactions.SlashContext, user: interactions.User, comm
         save_roles(role_data)
         await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=False)
     else:
-        await ctx.send(f"User {user.mention} does not have permission for `{command_name}`.", ephemeral=False)
+        await ctx.send(f"User {user.mention} does not have permission for `{command_name}`.", ephemeral=True)

@@ -23,7 +23,7 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
 # Import commands after bot initialization
-from commands.inventory import inv, add_item, remove_item, trade
+from commands.inventory import inv, additem, removeitem, trade
 from commands.admin import giverole, droprole
 from commands.general import viewlogs, showrole, showhelp, viewbotlogs, cgpass
 
