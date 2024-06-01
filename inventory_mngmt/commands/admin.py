@@ -1,6 +1,15 @@
 import interactions
 from config import role_data, save_roles, get_logo_url
 
+# Helper function to make announcements
+async def announce_change(ctx, description):
+    embed = interactions.Embed(
+        title="Admin Update",
+        description=description,
+        color=0xffa500
+    )
+    await ctx.send(embeds=[embed])
+
 # Command to give a user permission for a specific command
 @interactions.slash_command(
     name="bankgiverole",
@@ -46,6 +55,9 @@ async def bankgiverole(ctx: interactions.SlashContext, user: interactions.User, 
     save_roles(role_data)
     await ctx.send(f"User {user.mention} has been given permission to use `{command_name}`.", ephemeral=False)
 
+    # Announce the change
+    await announce_change(ctx, f"User {user.mention} has been given permission to use `{command_name}`.")
+
 # Command to remove a user's permission for a specific command
 @interactions.slash_command(
     name="bankdroprole",
@@ -88,5 +100,8 @@ async def bankdroprole(ctx: interactions.SlashContext, user: interactions.User, 
         role_data["permissions"][str(user.id)].remove(command_name)
         save_roles(role_data)
         await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=False)
+            # Announce the change
+        await announce_change(ctx, f"User {user.mention}'s permission to use `{command_name}` has been removed.")
+
     else:
         await ctx.send(f"User {user.mention} does not have permission for `{command_name}`.", ephemeral=True)

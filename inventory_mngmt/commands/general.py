@@ -43,10 +43,10 @@ async def banklogs(ctx: interactions.SlashContext, user: interactions.User = Non
 
 # Command to list all commands with descriptions and examples
 @interactions.slash_command(
-    name="showhelp",
+    name="bankhelp",
     description="List all commands with descriptions and examples."
 )
-async def showhelp(ctx: interactions.SlashContext):
+async def bankhelp(ctx: interactions.SlashContext):
     embed = interactions.Embed(
         title="CG Bank Commands",
         description="Here are all the available commands:",
@@ -58,43 +58,47 @@ async def showhelp(ctx: interactions.SlashContext):
         "Inventory Commands": {
             "bankinv": {
                 "description": "Peek into someone's inventory, or your own if you're feeling nosy!",
-                "example": "/inv @username or /inv"
+                "example": "/bankinv @username or /bankinv"
             },
             "bankadditem": {
                 "description": "Add a shiny new item to someone's inventory.",
-                "example": "/additem @username item_name"
+                "example": "/bankadditem @username item_name"
             },
-            "removeitem": {
+            "bankremoveitem": {
                 "description": "Remove an item from someone's inventory.",
-                "example": "/removeitem @username item_name"
+                "example": "/bankremoveitem @username item_name"
             },
-            "trade": {
+            "banktrade": {
                 "description": "Trade an item from one user to another. Sharing is caring!",
-                "example": "/trade item_name @from_user @to_user"
-            }
+                "example": "/banktrade item_name @from_user @to_user"
+            },
+            "bankuse": {
+                "description": "Use an item from the inventory. They exists to be used!",
+                "example": "/bankuse item_name"
+            },
         },
         "Admin Commands": {
-            "giverole": {
+            "bankgiverole": {
                 "description": "Give a user permission for a specific command.",
-                "example": "/giverole @username @command"
+                "example": "/bankgiverole @username @command"
             },
-            "droprole": {
+            "bankdroprole": {
                 "description": "Remove a user's permission for a specific command.",
-                "example": "/droprole @username @command"
+                "example": "/bankdroprole @username @command"
             }
         },
         "Other Commands": {
-            "viewlogs": {
+            "banklogs": {
                 "description": "Sneak a peek at someone's activity logs. Shhh, it's a secret!",
                 "example": "/viewlogs @username"
             },
-            "showrole": {
-                "description": "Show all mod roles and the users with those roles.",
-                "example": "/showrole"
+            "cgpass": {
+                "description": "View perks of CG Pass and Mod details",
+                "example": "/cgpass"
             },
-            "viewbotlogs": {
-                "description": "View everything that happened via bot by a particular user.",
-                "example": "/viewbotlogs @username"
+            "bankhelp": {
+                "description": "View all available commands for CG BANK",
+                "example": "/bankhelp"
             }
         }
     }
