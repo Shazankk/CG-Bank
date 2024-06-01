@@ -29,36 +29,35 @@ CG Bank Bot is a feature-rich Discord bot designed to manage inventories, assign
 
 ### Inventory Commands
 
-- `!inv [@username]`: Peek into someone's inventory, or your own if you're feeling nosy! 
-  - Example: `!inv @user` or `!inv`
-
-- `!additem @username item_name`: Add a shiny new item to someone's inventory.
-  - Example: `!additem @user CoolItem`
-
-- `!removeitem @username item_name`: Remove an item from someone's inventory.
-  - Example: `!removeitem @user CoolItem`
-
-- `!trade item_name @from_user @to_user`: Trade an item from one user to another. Sharing is caring!
-  - Example: `!trade CoolItem @user1 @user2`
+- **/bankinv**: Peek into someone's inventory, or your own if you're feeling nosy!
+  - Example: `/bankinv @username` or `/bankinv`
+- **/bankadditem**: Add a shiny new item to someone's inventory.
+  - Example: `/bankadditem @username item_name`
+- **/bankremoveitem**: Remove an item from someone's inventory.
+  - Example: `/bankremoveitem @username item_name`
+- **/banktrade**: Trade an item from one user to another. Sharing is caring!
+  - Example: `/banktrade item_name @from_user @to_user`
+- **/bankuse**: Use an item from the inventory. They exist to be used!
+  - Example: `/bankuse item_name`
 
 ### Admin Commands
 
-- `!giverole @username @command`: Give a user permission for a specific command.
-  - Example: `!giverole @user additem`
-
-- `!droprole @username @command`: Remove a user's permission for a specific command.
-  - Example: `!droprole @user additem`
+- **/bankgiverole**: Give a user permission for a specific command.
+  - Example: `/bankgiverole @username @command`
+- **/bankdroprole**: Remove a user's permission for a specific command.
+  - Example: `/bankdroprole @username @command`
 
 ### Other Commands
 
-- `!viewlogs [@username]`: Sneak a peek at someone's activity logs. Shhh, it's a secret!
-  - Example: `!viewlogs @user`
+- **/banklogs**: Sneak a peek at someone's activity logs. Shhh, it's a secret!
+  - Example: `/viewlogs @username`
+- **/cgpass**: View perks of CG Pass and Mod details
+  - Example: `/cgpass`
+- **/bankhelp**: View all available commands for CG BANK
+  - Example: `/bankhelp`
 
-- `!showhelp`: List all commands with descriptions and examples. Includes an interactive dropdown menu for selecting commands.
-  
 ## Inviting the Bot
 To invite the bot to your server, use the following URL: [CG Bank Bot](https://discord.com/api/oauth2/authorize?client_id=1242981337342677003&permissions=[532576418880]&scope=bot%20applications.commands)
-
 
 ## Installation
 
