@@ -1,10 +1,11 @@
 import os
 import interactions
+from interactions import Embed, File
 from config import role_data, get_logo_url, get_user_logger, get_bot_logger
 
 # Command to view logs of a specific user (accessible by all users)
 @interactions.slash_command(
-    name="viewlogs",
+    name="banklogs",
     description="Sneak a peek at someone's activity logs. Shhh, it's a secret!",
     options=[
         interactions.SlashCommandOption(
@@ -15,7 +16,7 @@ from config import role_data, get_logo_url, get_user_logger, get_bot_logger
         )
     ]
 )
-async def viewlogs(ctx: interactions.SlashContext, user: interactions.User = None):
+async def banklogs(ctx: interactions.SlashContext, user: interactions.User = None):
     if user is None:
         user = ctx.author  # Default to the command invoker if no user is specified
     user_id = str(user.id)
@@ -39,85 +40,6 @@ async def viewlogs(ctx: interactions.SlashContext, user: interactions.User = Non
         embed.set_thumbnail(url="attachment://cgcg.png")
         await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
-# Command to show all actions taken by a specific user via the bot
-@interactions.slash_command(
-    name="viewbotlogs",
-    description="View everything that happened via bot by a particular user.",
-    options=[
-        interactions.SlashCommandOption(
-            name="user",
-            description="User to view bot logs of",
-            type=interactions.OptionType.USER,
-            required=False
-        )
-    ]
-)
-async def viewbotlogs(ctx: interactions.SlashContext, user: interactions.User = None):
-    if user is None:
-        user = ctx.author  # Default to the command invoker if no user is specified
-    user_id = str(user.id)
-    log_file_path = f'logs/bot_{user_id}.log'
-    if os.path.exists(log_file_path):
-        with open(log_file_path, 'r') as log_file:
-            logs = log_file.read()
-        embed = interactions.Embed(
-            title=f"Bot Logs for {user.display_name}",
-            description=f"```\n{logs}\n```",
-            color=0xffd700
-        )
-        embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
-    else:
-        embed = interactions.Embed(
-            title="No Bot Logs Found",
-            description=f'No bot logs found for {user.display_name}.',
-            color=0xff0000
-        )
-        embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
-
-# Command to show mod roles and the users with those roles
-@interactions.slash_command(
-    name="showrole",
-    description="Show all mod roles and the users with those roles."
-)
-async def showrole(ctx: interactions.SlashContext):
-    embed = interactions.Embed(title="Mod Roles", description="Here are all the mod roles and the users with those roles:", color=0x00ff00)
-    guild = ctx.guild
-    mod_roles = list(set(role_data["mod_roles"]))  # Ensure no duplicates
-
-    # Include CG Dev role explicitly if not already included
-    cg_dev_role = next((role for role in guild.roles if role.name == "🏆 CG Dev"), None)
-    if cg_dev_role and cg_dev_role.id not in mod_roles:
-        mod_roles.append(cg_dev_role.id)
-
-    roles_and_permissions = {}
-    for role_id in mod_roles:
-        role = guild.get_role(role_id)
-        if role:
-            members = [member.mention for member in role.members]
-            if members:
-                roles_and_permissions[role.name] = members
-
-    specific_permissions = []
-    for user_id, permissions in role_data["permissions"].items():
-        if permissions:  # Only include users with existing permissions
-            member = guild.get_member(int(user_id))
-            if member:
-                specific_permissions.append(member.mention)
-
-    if not roles_and_permissions and not specific_permissions:
-        embed.add_field(name="No Mod Roles", value="No mod roles have been assigned yet.", inline=False)
-    else:
-        for role, members in roles_and_permissions.items():
-            member_list = "\n".join(set(members))  # Ensure no duplicates
-            embed.add_field(name=role, value=member_list, inline=False)
-        if specific_permissions:
-            specific_member_list = "\n".join(set(specific_permissions))  # Ensure no duplicates
-            embed.add_field(name="Specific Command Permissions", value=specific_member_list, inline=False)
-
-    embed.set_thumbnail(url="attachment://cgcg.png")
-    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 # Command to list all commands with descriptions and examples
 @interactions.slash_command(
@@ -134,11 +56,11 @@ async def showhelp(ctx: interactions.SlashContext):
     # Group commands into categories
     categories = {
         "Inventory Commands": {
-            "inv": {
+            "bankinv": {
                 "description": "Peek into someone's inventory, or your own if you're feeling nosy!",
                 "example": "/inv @username or /inv"
             },
-            "additem": {
+            "bankadditem": {
                 "description": "Add a shiny new item to someone's inventory.",
                 "example": "/additem @username item_name"
             },
@@ -198,7 +120,7 @@ async def showhelp(ctx: interactions.SlashContext):
 )
 async def cgpass(ctx: interactions.SlashContext):
     embed = interactions.Embed(
-        title="CG Pass Rewards",
+        title="CG Pass Rewards and Mods",
         description=(
             "Congratulations! With the CG Pass, you get the following rewards:\n\n"
             "**1. Access to [Giveaways](https://discord.com/channels/881509696882757643/961320997468926002) channel**\n\n"
@@ -208,14 +130,45 @@ async def cgpass(ctx: interactions.SlashContext):
             "⏳⏳⏳⏳⏳⏳⏳⏳\n\n"
             "**4. 8 3h Industry Boosts**\n"
             "🏭🏭🏭🏭🏭🏭🏭🏭\n\n"
-            "**We are available on [OpenSea](https://opensea.io/assets/matic/0x1cd70c8c8bac5fb395f2c5dd5f25859ab9b446c0/1)**"
+            "**We are available on [OpenSea](https://opensea.io/assets/matic/0x1cd70c8c8bac5fb395f2c5dd5f25859ab9b446c0/1)**\n\n\n"
+            "Here are all the mod roles and the users with those roles:"
+
         ),
         color=0x00ff00
     )
-    
+
+    guild = ctx.guild
+    mod_roles = list(set(role_data["mod_roles"]))  # Ensure no duplicates
+
+    # Include CG Dev role explicitly if not already included
+    cg_dev_role = next((role for role in guild.roles if role.name == "🏆 CG Dev"), None)
+    if cg_dev_role and cg_dev_role.id not in mod_roles:
+        mod_roles.append(cg_dev_role.id)
+
+    roles_and_permissions = {}
+    for role_id in mod_roles:
+        role = guild.get_role(role_id)
+        if role:
+            members = [member.mention for member in role.members]
+            if members:
+                roles_and_permissions[role.name] = members
+
+    specific_permissions = []
+    for user_id, permissions in role_data["permissions"].items():
+        if permissions:  # Only include users with existing permissions
+            member = guild.get_member(int(user_id))
+            if member:
+                specific_permissions.append(member.mention)
+
+    if not roles_and_permissions and not specific_permissions:
+        embed.add_field(name="No Mod Roles", value="No mod roles have been assigned yet.", inline=False)
+    else:
+        for role, members in roles_and_permissions.items():
+            member_list = "\n".join(set(members))  # Ensure no duplicates
+            embed.add_field(name=role, value=member_list, inline=False)
+        if specific_permissions:
+            specific_member_list = "\n".join(set(specific_permissions))  # Ensure no duplicates
+            embed.add_field(name="Specific Command Permissions", value=specific_member_list, inline=False)
+
     embed.set_thumbnail(url="attachment://cgcg.png")
-    embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
-
     await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
-
-
