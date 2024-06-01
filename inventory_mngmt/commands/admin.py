@@ -3,7 +3,7 @@ from config import role_data, save_roles, get_logo_url
 
 # Command to give a user permission for a specific command
 @interactions.slash_command(
-    name="giverole",
+    name="bankgiverole",
     description="Give a user permission for a specific command.",
     options=[
         interactions.SlashCommandOption(
@@ -18,13 +18,13 @@ from config import role_data, save_roles, get_logo_url
             type=interactions.OptionType.STRING,
             required=True,
             choices=[
-                interactions.SlashCommandChoice(name="additem", value="additem"),
-                interactions.SlashCommandChoice(name="removeitem", value="removeitem")
+                interactions.SlashCommandChoice(name="bankadditem", value="bankadditem"),
+                interactions.SlashCommandChoice(name="bankremoveitem", value="bankremoveitem")
             ]
         )
     ]
 )
-async def giverole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
+async def bankgiverole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
     member = ctx.guild.get_member(ctx.author.id)
     if not member:
         await ctx.send("You are not a member of this guild.", ephemeral=False)
@@ -48,7 +48,7 @@ async def giverole(ctx: interactions.SlashContext, user: interactions.User, comm
 
 # Command to remove a user's permission for a specific command
 @interactions.slash_command(
-    name="droprole",
+    name="bankdroprole",
     description="Remove a user's permission for a specific command.",
     options=[
         interactions.SlashCommandOption(
@@ -63,13 +63,13 @@ async def giverole(ctx: interactions.SlashContext, user: interactions.User, comm
             type=interactions.OptionType.STRING,
             required=True,
             choices=[
-                interactions.SlashCommandChoice(name="additem", value="additem"),
-                interactions.SlashCommandChoice(name="removeitem", value="removeitem")
+                interactions.SlashCommandChoice(name="bankadditem", value="bankadditem"),
+                interactions.SlashCommandChoice(name="bankremoveitem", value="bankremoveitem")
             ]
         )
     ]
 )
-async def droprole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
+async def bankdroprole(ctx: interactions.SlashContext, user: interactions.User, command_name: str):
     member = ctx.guild.get_member(ctx.author.id)
     if not member:
         await ctx.send("You are not a member of this guild.", ephemeral=False)
