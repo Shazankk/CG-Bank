@@ -41,7 +41,7 @@ async def banklogs(ctx: interactions.SlashContext, user: interactions.User = Non
         await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
 
-# Command to list all commands with descriptions and examples
+#Explains all the commands in the bot
 @interactions.slash_command(
     name="bankhelp",
     description="List all commands with descriptions and examples."
@@ -73,7 +73,7 @@ async def bankhelp(ctx: interactions.SlashContext):
                 "example": "/banktrade item_name @from_user @to_user"
             },
             "bankuse": {
-                "description": "Use an item from the inventory. They exists to be used!",
+                "description": "Use an item from the inventory. They exist to be used!",
                 "example": "/bankuse item_name"
             },
         },
@@ -103,21 +103,20 @@ async def bankhelp(ctx: interactions.SlashContext):
         }
     }
 
-    # Format commands for each category
+    # Format commands for each category in columns
     for category, commands_dict in categories.items():
-        commands_description = ""
+        embed.add_field(name=f"**{category}**", value="\u200b", inline=False)  # Add category title
+
         for command_name, command_info in commands_dict.items():
-            description = command_info["description"]
-            example = command_info["example"]
-            commands_description += f"**/{command_name}**\n{description}\n*Usage:* `{example}`\n\n"
-        if commands_description.strip():  # Ensure the field is not empty
-            embed.add_field(name=f"**{category}**", value=commands_description, inline=False)
+            embed.add_field(name=f"**/{command_name}**", value=f"{command_info['description']}\n*Usage:* `{command_info['example']}`", inline=True)
 
     embed.set_thumbnail(url="attachment://cgcg.png")
     embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
 
     await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
 
+
+#CG Pass information and mod details
 @interactions.slash_command(
     name="cgpass",
     description="Get information about the CG Pass rewards."
