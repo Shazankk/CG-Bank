@@ -30,7 +30,7 @@ async def banklogs(ctx: interactions.SlashContext, user: interactions.User = Non
             color=0xffd700
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral = True)
     else:
         embed = interactions.Embed(
             title="No Logs Found",
@@ -38,7 +38,7 @@ async def banklogs(ctx: interactions.SlashContext, user: interactions.User = Non
             color=0xff0000
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
+        await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral = True)
 
 
 #Explains all the commands in the bot
@@ -113,7 +113,7 @@ async def bankhelp(ctx: interactions.SlashContext):
     embed.set_thumbnail(url="attachment://cgcg.png")
     embed.set_author(name="CG Bank", icon_url="attachment://cgcg.png")
 
-    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral = True)
 
 
 #CG Pass information and mod details
@@ -174,4 +174,4 @@ async def cgpass(ctx: interactions.SlashContext):
             embed.add_field(name="Specific Command Permissions", value=specific_member_list, inline=False)
 
     embed.set_thumbnail(url="attachment://cgcg.png")
-    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral=False)
+    await ctx.send(embeds=[embed], files=[interactions.File(file=open(get_logo_url(), 'rb'), file_name="cgcg.png")], ephemeral = True)

@@ -7,7 +7,15 @@
             "removeitem",
             "bankadditem"
         ],
-        "312017745367793664": []
+        "312017745367793664": [],
+        "607123346043306004": [
+            "bankadditem",
+            "bankremoveitem"
+        ],
+        "863775599147352084": [
+            "bankadditem",
+            "bankremoveitem"
+        ]
     },
     "mod_roles": []
 }

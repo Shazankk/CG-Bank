@@ -106,7 +106,7 @@ async def bankadd(ctx: interactions.ComponentContext, user: interactions.User, i
             color=0x00ff00
         )
         embed.set_thumbnail(url="attachment://cgcg.png")
-        await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=False)
+        await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=True)
         
         # Announce the change
         await announce_change(ctx, f"{ctx.author.display_name} added {quantity}x {item} to {user.display_name}'s inventory.")
@@ -161,7 +161,7 @@ async def bankremove(ctx: interactions.ComponentContext, user: interactions.User
                 color=0xff0000
             )
             embed.set_thumbnail(url="attachment://cgcg.png")
-            await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=False)
+            await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=True)
             
             # Announce the change
             await announce_change(ctx, f"{ctx.author.display_name} removed {quantity}x {item} from {user.display_name}'s inventory.")
@@ -227,7 +227,7 @@ async def banktrade(ctx: interactions.ComponentContext, item: str, quantity: int
                 color=0x800080
             )
             embed.set_thumbnail(url="attachment://cgcg.png")
-            await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=False)
+            await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=True)
 
             # Announce the change
             await announce_change(ctx, f"{ctx.author.display_name} traded {quantity}x {item} from {from_user.display_name} to {to_user.display_name}.")
@@ -274,7 +274,7 @@ async def bankuse(ctx: interactions.ComponentContext, item: str, quantity: int):
                 color=0x00ff00
             )
             embed.set_thumbnail(url="attachment://cgcg.png")
-            await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=False)
+            await ctx.send(embeds=[embed], files=[interactions.File(get_logo_url(), file_name="cgcg.png")], ephemeral=True)
 
             # Announce the change
             await announce_change(ctx, f"{ctx.author.display_name} used {quantity}x {item} from their inventory.")

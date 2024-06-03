@@ -53,7 +53,7 @@ async def bankgiverole(ctx: interactions.SlashContext, user: interactions.User, 
     
     role_data["permissions"][str(user.id)].append(command_name)
     save_roles(role_data)
-    await ctx.send(f"User {user.mention} has been given permission to use `{command_name}`.", ephemeral=False)
+    await ctx.send(f"User {user.mention} has been given permission to use `{command_name}`.", ephemeral=True)
 
     # Announce the change
     await announce_change(ctx, f"User {user.mention} has been given permission to use `{command_name}`.")
@@ -99,7 +99,7 @@ async def bankdroprole(ctx: interactions.SlashContext, user: interactions.User, 
     if str(user.id) in role_data["permissions"] and command_name in role_data["permissions"][str(user.id)]:
         role_data["permissions"][str(user.id)].remove(command_name)
         save_roles(role_data)
-        await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=False)
+        await ctx.send(f"User {user.mention}'s permission to use `{command_name}` has been removed.", ephemeral=True)
             # Announce the change
         await announce_change(ctx, f"User {user.mention}'s permission to use `{command_name}` has been removed.")
 
